@@ -12,22 +12,24 @@ fastify.register(require("fastify-multipart"));
 
 fastify.post("/image", async (req, reply) => {
   const mp = req.multipart(handler, async err => {
-    console.log("upload completed");
+    fastify.log.debug("processing image");
     const result = await matchImage();
     reply.code(200).send(result);
   });
   mp.on("field", function(key, value) {
-    console.log("form-data", key, value);
+    fastify.log.debug("form-data", key, value);
   });
   function handler(field, file, filename, encoding, mimetype) {
-    console.log("File Uploaded");
+    fastify.log.info("File Uploaded", filename);
     pump(file, fs.createWriteStream(QUERY_IMAGE));
   }
 });
-// Declare a route
+// FIXME: Redundant route
 fastify.get("/image", async (request, reply) => {
   return await matchImage();
 });
+
+const matcherList = [];
 
 const matchImage = async () => {
   const queryImage = await canvas.loadImage(QUERY_IMAGE);
@@ -36,8 +38,34 @@ const matchImage = async () => {
     .withFaceLandmarks()
     .withFaceDescriptors();
   let matchedFlag = { found: false };
+  matcherList.filter(entry => {
+    fastify.log.debug(new Date(), "comparing", entry);
+    resultsQuery.map(res => {
+      const bestMatch = entry.faceMatcher.findBestMatch(res.descriptor);
+      if (bestMatch.label !== "unknown") {
+        matchedFlag = { found: true, file: entry.file };
+      }
+    });
+  });
+  return matchedFlag;
+};
+
+// Run the server!
+const start = async () => {
+  await faceDetectionNet.loadFromDisk(WEIGHTS);
+  await faceapi.nets.faceLandmark68Net.loadFromDisk(WEIGHTS);
+  await faceapi.nets.faceRecognitionNet.loadFromDisk(WEIGHTS);
+  await preloadKnownImage();
+  try {
+    await fastify.listen(3000);
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+async function preloadKnownImage() {
   const files = await fsPromises.readdir(KNOWN_IMAGE_FOLDER);
-  console.log("processing: ", files);
+  fastify.log.info("preloading images: ", files);
   await Promise.all(
     files.map(async f => {
       const referenceImage = await canvas.loadImage(
@@ -48,29 +76,9 @@ const matchImage = async () => {
         .withFaceLandmarks()
         .withFaceDescriptors();
       const faceMatcher = new faceapi.FaceMatcher(resultsRef);
-      resultsQuery.map(res => {
-        const bestMatch = faceMatcher.findBestMatch(res.descriptor);
-        console.log(bestMatch);
-        if (bestMatch.label !== "unknown") {
-          matchedFlag = { found: true, file: f };
-        }
-      });
+      fastify.log.debug("loaded file", f);
+      matcherList.push({ faceMatcher, file: f });
     })
   );
-  return matchedFlag;
-};
-
-// Run the server!
-const start = async () => {
-  await faceDetectionNet.loadFromDisk(WEIGHTS);
-  await faceapi.nets.faceLandmark68Net.loadFromDisk(WEIGHTS);
-  await faceapi.nets.faceRecognitionNet.loadFromDisk(WEIGHTS);
-  try {
-    await fastify.listen(3000);
-    fastify.log.info(`server listening on ${fastify.server.address().port}`);
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
+}
 start();
