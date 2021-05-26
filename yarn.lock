@@ -428,6 +428,10 @@ deepmerge@^3.0.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/deepmerge/-/deepmerge-3.2.0.tgz#58ef463a57c08d376547f8869fdc5bcee957f44e"
 
+deepmerge@^4.0.0:
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/deepmerge/-/deepmerge-4.2.2.tgz#44d2ea3679b8f4d4ffba33f03d865fc1e7bf4955"
+
 define-property@^0.2.5:
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/define-property/-/define-property-0.2.5.tgz#c35b1ef918ec3c990f9a5bc57be04aacec5c8116"
@@ -576,12 +580,12 @@ fast-safe-stringify@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-safe-stringify/-/fast-safe-stringify-2.0.6.tgz#04b26106cc56681f51a044cfc0d76cf0008ac2c2"
 
-fastify-multipart@^0.8.0:
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/fastify-multipart/-/fastify-multipart-0.8.0.tgz#8a67a140a6c4ff26e619d7b7ed1cb1dd0e12dd07"
+fastify-multipart@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/fastify-multipart/-/fastify-multipart-1.0.5.tgz#bb6e39d4d20c09e0ac5ba676ab60c0b40947a671"
   dependencies:
     busboy "^0.3.0"
-    deepmerge "^3.0.0"
+    deepmerge "^4.0.0"
     end-of-stream "^1.4.1"
     fastify-plugin "^1.5.0"
 
